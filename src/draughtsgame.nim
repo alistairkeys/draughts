@@ -110,6 +110,8 @@ proc moveTo*(game: var DraughtsGame, piece: var Piece, where: tuple[x, y: int]):
         (piece.x, piece.y) = (where.x, where.y)
         piece.king = piece.king or where.y in {0, 7}
         p = piece
+        if game.movedPieceThatCanCapture.isSome:
+          game.movedPieceThatCanCapture = some p
         break
 
   game.captureRequired = false
