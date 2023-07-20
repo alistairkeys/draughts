@@ -1,0 +1,6 @@
+{
+    "nim.project": [
+        "src/draughts.nim"
+    ],
+    "nim.runOutputDirectory": "src"
+}
