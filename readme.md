@@ -67,7 +67,6 @@ Minesweeper and Solitaire.
 
 ## Fixes / Rainy day work
 
-* Bug - if you click a square and mouse over opposite colour piece, it highlights
 * Improvement - use bit boards rather than looping all the time
 * Improvement - AI opponent (need to make sure it's not perfect!)
 * Improvement - drag/drop support for moving pieces

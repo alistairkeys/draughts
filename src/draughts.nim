@@ -3,8 +3,8 @@ import draughtsgame
 import std/options
 
 const
-  windowWidth = 800
-  windowHeight = 400
+  windowWidth = 1024
+  windowHeight = 768
   squareSize = min(windowWidth div 8, windowHeight div 8)
   boardPx = 8 * squareSize
   blackSquare = rgba(128, 128, 128, 255)
@@ -21,7 +21,7 @@ proc handleKeyPress(window: Window, key, scancode, action, modifiers: cint) {.cd
     if game.state != inProgress and key in {KEY_SPACE}:
       echo "Starting new game"
       game = initGame()
-    elif key in {KEY_A .. KEY_Z, KEY_ESCAPE}:
+    elif key in {KEY_A .. KEY_Z} or key == KEY_ESCAPE:
       echo "Pressed a key: ", key
       case key
         of KEY_ESCAPE: window.setWindowShouldClose(1.cint)
@@ -67,11 +67,11 @@ proc mouseButtonClicked(window: Window, button, action, modifiers: cint) {.cdecl
 proc generateLetters(bxy: Boxy) =
   var typeface = readTypeface(getDataDir() & "IBMPlexMono-Bold.ttf")
   var font = newFont(typeface)
-  font.size = 28
+  font.size = 24
   font.paint = "#000000"
   for ch in {'A'..'Z', 'a'..'z', '0'..'9', ',', '[', ']', '!', '-', '_', '/', '\\', ':'}:
-    let arrangement = typeset(@[newSpan($ch, font)], bounds = vec2(32, 32))
-    let textImage = newImage(32, 32)
+    let arrangement = typeset(@[newSpan($ch, font)], bounds = vec2(28, 28))
+    let textImage = newImage(28, 28)
     textImage.fillText(arrangement)
     bxy.addImage("text" & $ch, textImage)
 
@@ -185,14 +185,19 @@ proc doGame() =
     bxy.drawImage("gameBoard", rect = rect(vec2(0, 0), vec2(boardPx.float32, boardPx.float32)))
 
     proc drawPieces(pieces: seq[Piece], image: string) =
+      const
+        noTint = color(1, 1, 1, 1)
+        clickedTint = color(0.5, 1, 0, 1)
+        pieceUnderCursorTint = color(1, 1, 0, 1)
+
       for piece in pieces:
-        var tint = color(1, 1, 1, 1)
+        var tint = noTint
         if clickedPiece.isSome and piece == clickedPiece.get:
-          tint = color(0.5, 1, 0, 1)
+          tint = clickedTint
         elif squareUnderCursor.isSome:
           let sq = squareUnderCursor.get
-          if sq.x == piece.x and sq.y == piece.y:
-            tint = color(1, 1, 0, 1)
+          if sq.x == piece.x and sq.y == piece.y and piece.colour == game.playerToMove:
+            tint = pieceUnderCursorTint
         let img = if piece.king: image & "king" else: image
         bxy.drawImage(img, rect = rect(vec2((piece.x * squareSize).float32, ((7 - piece.y) * squareSize).float32),
                                        vec2(squareSize.float32, squareSize.float32)),
@@ -205,9 +210,9 @@ proc doGame() =
       for mv in validMoves:
         bxy.drawImage("whiteSquareMoveIndicator",
                       rect = rect(vec2((mv.there.x * squareSize).float32, ((7 - mv.there.y) * squareSize).float32),
-                                  vec2(squareSize.float32, squareSize.float32)),  tint = color(0, 1, 0, 1))
+                                  vec2(squareSize.float32, squareSize.float32)), tint = color(0, 1, 0, 1))
 
-    const helpTextLeft = boardPx + squareSize
+    const helpTextLeft = boardPx + 18
     var y = 24'f32
 
     case game.state
@@ -216,7 +221,7 @@ proc doGame() =
         let str = if game.playerToMove == white: "White to move" else: "Black to move"
         bxy.drawNormalText(str, vec2(helpTextLeft, y)); y += 36;
         if game.captureRequired:
-          bxy.drawNormalText("You must capture!", vec2(helpTextLeft, y))
+          bxy.drawNormalText("Make a capture!", vec2(helpTextLeft, y))
 
       of whiteWin:
         bxy.drawNormalText("White wins!", vec2(helpTextLeft, y)); y += 128
